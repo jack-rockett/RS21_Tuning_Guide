@@ -10,7 +10,8 @@ import os
 st.set_page_config(page_title='RS21 Interactive Tuning Guide')
 st.header('RS21 Tuning Guide')
 # st.caption('App developed by Powder Monkey Sailing Team')
-# st.caption('Rig tension as per North Sails Guide, Target speeds as per ORC certificate for J70')
+st.caption('Rig tension as per:')
+st.caption('https://www.rssailing.com/rs21-tuning-guide/')
 ### --- LOAD DATAFRAME
 excel_file = 'RS21Tuning Database.xlsx'
 sheet_name_1 = 'Rig Tuning Database'
