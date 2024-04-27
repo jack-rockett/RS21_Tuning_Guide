@@ -1,0 +1,9 @@
+openpyxl
+numpy
+plotly
+pandas
+streamlit
+Pillow
+scikit-learn
+beautifulsoup4
+streamlit_autorefresh
