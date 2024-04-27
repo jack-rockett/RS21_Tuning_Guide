@@ -7,13 +7,60 @@ import pytz
 from datetime import date
 import os
 
+st.set_page_config(page_title='RS21 Interactive Tuning Guide')
+st.header('RS21 Tuning Guide')
+# st.caption('App developed by Powder Monkey Sailing Team')
+# st.caption('Rig tension as per North Sails Guide, Target speeds as per ORC certificate for J70')
+### --- LOAD DATAFRAME
+excel_file = 'RS21Tuning Database.xlsx'
+sheet_name_1 = 'Rig Tuning Database'
+sheet_name_2 = 'JIB Tuning Database'
+sheet_name_3 = 'Polars'
 
-# from streamlit_autorefresh import st_autorefresh
-#
-# # Run the autorefresh about every 2000 milliseconds (2 seconds) and stop
-# # after it's been refreshed 100 times.
-# count = st_autorefresh(interval=60000, limit=100, key="fizzbuzzcounter")
+RIG_df = pd.read_excel(excel_file,
+                            sheet_name=sheet_name_1,
+                            usecols='A:H',
+                            header=0,
+                            converters={'KEY': str, 'UPPERS_TURNS': str, 'LOWERS_TURNS': str, 'TENSION_LOWERS': str,
+                                        'TENSION UPPERS': str, 'VANG': str, 'WIND_SPEED': int, 'BACKSTAY': str}
+                            )
 
+JIB_df = pd.read_excel(excel_file,
+                            sheet_name=sheet_name_2,
+                            usecols='A:D',
+                            header=0,
+                            converters={'KEY': str, 'TACK_HEIGHT': str, 'HALYARD': str, 'WIND_SPEED': int, 'CAR_POSITION': str}
+                            )
+Polars_df = pd.read_excel(excel_file,
+                            sheet_name=sheet_name_3,
+                            usecols='A:C',
+                            header=0,
+                            # converters={'wind_speed': int, 'beat_target': str, 'HALYARD': str, 'JIB_CUT': str, 'WIND_SPEED': int, 'CAR_POSITION': str}
+                            )
+wind_speed_filter = st.slider("Wind Speed Filter (Kts)", 0, 23, 10)
+    # st.number_input("Wind Speed Filter", min_value=0, max_value=20, value=0)
+    # st.slider("Wind Speed Filter", 0, 20, (0, 20))
+# jib_cut_filter = st.radio("Jib Cut Selection", ["J6","J2+"])
+
+
+filtered_JIB_df = JIB_df[(JIB_df['WIND_SPEED'] == wind_speed_filter)]
+filtered_RIG_df = RIG_df[(RIG_df['WIND_SPEED'] == wind_speed_filter)]
+filtered_polars_df = Polars_df[(Polars_df['wind_speed'] == wind_speed_filter)]
+
+# --- STREAMLIT SELECTION
+st.subheader('Settings:')
+
+col1, col2, col3 = st.columns (3)
+col1.metric(label='Uppers Turns', value=filtered_RIG_df['UPPERS_TURNS'].max())
+col1.metric(label='Lowers Turns', value=filtered_RIG_df['LOWERS_TURNS'].max())
+col2.metric(label='Tack Height', value=filtered_JIB_df['TACK_HEIGHT'].max())
+# col2.metric(label='Jib Halyard', value=filtered_JIB_df['HALYARD'].max())
+col2.metric(label='Car Position', value=filtered_JIB_df['CAR_POSITION'].max())
+# col3.metric(label='Upwind target Kts', value=filtered_polars_df['beat_target'])
+# col3.metric(label='Downwind target Kts', value=filtered_polars_df['run_target'])
+
+
+st.subheader('Solent Tide:')
 def scrape_data(url):
     response = requests.get(url)
     soup = BeautifulSoup(response.text, 'html.parser')
@@ -116,5 +163,14 @@ st.caption('Closest HW:')
 st.write(df_filtered)
 st.caption('Data Scraped live from BBC Weather presentation of UK Hydrographic Office Data')
 st.caption('All Times quoted in GMT')
-st.caption('App developed by Powder Monkey Sailing Team')
-# st.write(f"Refreshed: {count} times")
+
+# Select the first two columns and rename them
+df = df.iloc[:, :2]
+df.columns = ['Time', 'Height']
+# Convert the 'Height' column to float type
+df['Height'] = df['Height'].astype(float)
+
+# Add the 'Phase' column based on the conditions
+df['Phase'] = df['Height'].apply(lambda x: 'High' if x >= 3 else 'Low' )
+st.write(f"All Tide Times Today")
+st.write(df)
